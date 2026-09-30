@@ -29,7 +29,34 @@ struct meta_block *find_first_fit(int size){
 		block = block->next;
 	}
 	return NULL;
-}	
+}
+
+struct meta_block *find_best_fit(int size)
+{
+	int best_size = 8192; 
+        struct meta_block *block = (struct meta_block*) heap_start;
+        while(block != NULL){
+                if((block->used == 0) && (block->size >= size)){
+                        if(block->size - size < best_size){
+				best_size = block->size - size;
+			}
+                }
+                block = block->next;
+        }
+	if(best_size == 8192){
+		return NULL;
+	}
+	block = (struct meta_block*) heap_start;
+	while(block != NULL){
+                if((block->used == 0) && (block->size >= size)){
+                        if(block->size - size == best_size){
+                                return block;
+			}
+                }
+                block = block->next;
+        }
+        return NULL;
+}
 
 void set_prev_block(){
 	if(current_data_block == NULL){
@@ -50,7 +77,7 @@ void *talloc(int size){
 	bytes_allocated += size + metadata_size;
 	if(bytes_allocated > 8192){
 		bytes_allocated -= size + metadata_size;
-		struct meta_block *metadata = find_first_fit(size);
+		struct meta_block *metadata = find_best_fit(size);
 		if(metadata == NULL){
 			printf("Failed to allocate dynamic memory: Not enough space\n");
 			return NULL;
@@ -84,6 +111,11 @@ void tinyfree(void *block){
 	struct meta_block *test = block-metadata_size;
 	if(test->next == NULL){
 		free_last_block();
+		return;
+	}
+	if(test->next->used == 0){
+		test->size = metadata_size + test->size + test->next->size;
+		test->next = test->next + metadata_size + metadata_size;
 	}
 	test->used=0;
 }

@@ -4,12 +4,13 @@
 #include "talloc.h"
 
 int main(){
-        int *p = (int *) talloc(2000);
+        int *p = (int *) talloc(3000);
         printf("p:%p\n", p);
         int *q = (int *) talloc(2000);
         int *r = (int *) talloc(3000);
         printf("q:%p\n", q);
         printf("r:%p\n", r);
+	tinyfree(p);
         tinyfree(q);
         int *x = (int *) talloc(1500);
         printf("x:%p\n", x);
