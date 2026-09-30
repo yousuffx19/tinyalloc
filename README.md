@@ -10,7 +10,6 @@
 
 ## How to use
 - clone the repository into your system
-- run ``make``
 - include the talloc.h header file in your source file: ``#include <talloc.h>``
 - compile along with talloc.c. Example: ``gcc yourfile.c talloc.c -o test``
 
