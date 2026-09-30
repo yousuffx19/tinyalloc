@@ -10,8 +10,8 @@ int main(){
         int *r = (int *) talloc(3000);
         printf("q:%p\n", q);
         printf("r:%p\n", r);
-	tinyfree(p);
-        tinyfree(q);
+	tinyfree(q);
+        tinyfree(p);
         int *x = (int *) talloc(1500);
         printf("x:%p\n", x);
         tinyfree(x);

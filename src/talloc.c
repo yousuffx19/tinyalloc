@@ -123,5 +123,6 @@ void tinyfree(void *block){
 void free_all(){
 	if(heap_start != NULL){
 		munmap(heap_start, 8192);
+		heap_start = NULL;
 	}
 }
