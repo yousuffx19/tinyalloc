@@ -69,6 +69,16 @@ void set_prev_block(){
         }
 }
 
+void free_all(){
+        if(heap_start != NULL){
+                munmap(heap_start, 8192);
+                heap_start = NULL;
+		current_location = NULL;
+		current_data_block = NULL;
+		bytes_allocated = 0;
+        }
+}
+
 void *talloc(int size){ 
 	if(heap_start == NULL){
 		heap_start = mmap(NULL, 8192, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
@@ -82,6 +92,7 @@ void *talloc(int size){
 			printf("Failed to allocate dynamic memory: Not enough space\n");
 			return NULL;
 		}
+		metadata->used = 1;
 		return metadata->data_block;
 	}
 	set_prev_block();
@@ -97,6 +108,10 @@ void *talloc(int size){
 
 void free_last_block(){
 	struct meta_block *test = current_data_block - metadata_size;
+	if(test == heap_start){
+		free_all();
+		return;
+	}
 	current_location -= test->size + metadata_size;
 	bytes_allocated -= test->size + metadata_size;
 	struct meta_block *block = heap_start;
@@ -107,22 +122,33 @@ void free_last_block(){
 	block->next = NULL;
 }
 
+void merge_blocks(struct meta_block *block1, struct meta_block* block2){
+	 block1->size = metadata_size + block1->size + block2->size;
+         block1->next = block2->next;
+}
+
 void tinyfree(void *block){
 	struct meta_block *test = block-metadata_size;
+	if(test != heap_start){
+		struct meta_block *prev_block = heap_start;
+        	while(prev_block->next != test){
+                prev_block = prev_block->next;
+		}
+		if(prev_block->used==0){
+			merge_blocks(prev_block, test);
+			if(prev_block->next == NULL){
+				current_data_block = (void*) prev_block + metadata_size;
+			}
+			test = prev_block;
+		}
+
+	}
 	if(test->next == NULL){
 		free_last_block();
 		return;
 	}
 	if(test->next->used == 0){
-		test->size = metadata_size + test->size + test->next->size;
-		test->next = test->next + metadata_size + metadata_size;
+		merge_blocks(test, test->next);
 	}
 	test->used=0;
-}
-
-void free_all(){
-	if(heap_start != NULL){
-		munmap(heap_start, 8192);
-		heap_start = NULL;
-	}
 }

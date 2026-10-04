@@ -14,9 +14,13 @@ int main(){
         tinyfree(p);
         int *x = (int *) talloc(1500);
         printf("x:%p\n", x);
-        tinyfree(x);
+        tinyfree(r);
         int *z = (int *) talloc(1600);
         printf("z:%p\n", z);
+	tinyfree(z);
+	tinyfree(x);
+	int *a = talloc(1000);
+	printf("a:%p\n", a);
         return 0;
 }
 
