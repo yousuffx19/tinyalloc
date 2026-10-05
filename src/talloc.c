@@ -13,11 +13,22 @@ struct meta_block{
 	struct meta_block* next;
 };
 
-void *current_location = NULL;
-void *current_data_block = NULL;
-int bytes_allocated = 0;
+void *current_location = NULL; //points to end of the last block allocated
+void *current_data_block = NULL; //points to start of last block allocated
+int bytes_allocated = 0; //num of bytes from heap start to current location
 
 size_t metadata_size = sizeof(struct meta_block);
+
+void split_block(struct meta_block* original, int sub_block_size){
+	int total_block_size = sub_block_size + metadata_size;
+	struct meta_block *new_block = (struct meta_block*) ((void *) original + total_block_size);
+	new_block->used = 0;
+	new_block->next = original->next;
+	new_block->data_block = (void *) new_block + metadata_size;
+	new_block->size = original->size - total_block_size;
+	original->size = sub_block_size;
+	original->next = new_block;
+}
 
 struct meta_block *find_first_fit(int size){
 	struct meta_block *block = (struct meta_block*) heap_start;
@@ -91,6 +102,9 @@ void *talloc(int size){
 		if(metadata == NULL){
 			printf("Failed to allocate dynamic memory: Not enough space\n");
 			return NULL;
+		}
+		if(metadata->size - size > 1000){
+			split_block(metadata, size);
 		}
 		metadata->used = 1;
 		return metadata->data_block;
