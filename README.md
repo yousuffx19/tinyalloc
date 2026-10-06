@@ -7,6 +7,7 @@
 - Usable for very basic memory allocation tasks
 - Best fit block finding
 - Joining blocks when freed
+- Block splitting when large enough space remains
 
 ## How to use
 - clone the repository into your system
